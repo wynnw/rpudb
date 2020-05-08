@@ -92,7 +92,7 @@ def run_telnet_server(addr, port):
 
     return pid, os.fdopen(term_slave, 'w'), os.fdopen(stdin_master, 'r')
 
-def set_trace(addr='127.0.0.1', port=4444):
+def set_trace(addr='127.0.0.1', port=4444, no_signals=False):
     # Backup stdin and stdout before replacing them by the socket handle
     old_stdout = sys.stdout
     old_stdin = sys.stdin
@@ -112,9 +112,12 @@ def set_trace(addr='127.0.0.1', port=4444):
     signal.signal(signal.SIGINT, signal_handler)
 
     # Finally, run pudb
-    pudb.set_trace()
+    if no_signals:
+        # this allows this to work inside uwsgi
+        pudb._get_debugger().set_trace(sys._getframe().f_back)
+    else:
+        pudb.set_trace()
 
 
 if __name__ == '__main__':
     set_trace()
-
